@@ -391,10 +391,27 @@
   var copiedEl = document.getElementById('copied');
 
   function parseAmount(str){
-    // принимает "1 234,56", "1234.56", "1000"
-    var s = String(str).replace(/[\s\u00A0\u202F]/g, '').replace(',', '.');
-    if (!s || !/^\d+(\.\d{0,2})?$/.test(s)) return null;
-    var kop = Math.round(parseFloat(s) * 100);
+    // умный разбор: понимает "1 234,56", "1,234.56", "1.234,56", "1234.5", "₽ 1 000 руб."
+    var s = String(str).replace(/[^0-9.,]/g, '');
+    s = s.replace(/^[.,]+/, '').replace(/[.,]+$/, ''); // убираем висячие разделители
+    if (!s) return null;
+    var lastDot = s.lastIndexOf('.'), lastComma = s.lastIndexOf(',');
+    var sep = Math.max(lastDot, lastComma);
+    var intPart, fracPart = '';
+    if (sep === -1){ intPart = s; }
+    else {
+      var after = s.slice(sep + 1);
+      // 1–2 цифры после последнего разделителя — это копейки; 3 и больше — разделитель тысяч
+      if (after.length >= 1 && after.length <= 2){
+        intPart = s.slice(0, sep); fracPart = after;
+      } else {
+        intPart = s;
+      }
+    }
+    intPart = intPart.replace(/[.,]/g, '');
+    if (intPart === '') intPart = '0';
+    if (!/^[0-9]+$/.test(intPart)) return null;
+    var kop = parseInt(intPart, 10) * 100 + (fracPart ? parseInt(fracPart.length === 1 ? fracPart + '0' : fracPart, 10) : 0);
     if (!isFinite(kop) || kop < 0 || kop > 999999999999999) return null;
     return kop;
   }
@@ -453,6 +470,28 @@
   });
 
   amountEl.addEventListener('input', render);
+
+  /* при вставке приводим к виду "1 234,56": точка → запятая, лишние пробелы убираем */
+  amountEl.addEventListener('paste', function(e){
+    var text = (e.clipboardData || window.clipboardData).getData('text');
+    var kop = parseAmount(text);
+    if (kop !== null){
+      e.preventDefault();
+      amountEl.value = fmtMoney(kop);
+      render();
+    }
+    // если распарсить не удалось — оставляем стандартную вставку
+  });
+
+  /* при уходе с поля тоже нормализуем написанное вручную */
+  amountEl.addEventListener('blur', function(){
+    var kop = parseAmount(amountEl.value);
+    if (kop !== null){
+      amountEl.value = fmtMoney(kop);
+      render();
+    }
+  });
+
   fmtEl.addEventListener('change', render);
   capEl.addEventListener('change', render);
 
