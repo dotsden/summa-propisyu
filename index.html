@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="yandex-verification" content="702ba2f99796203d">
+<title>Сумма прописью с НДС 22% онлайн — калькулятор с любой ставкой</title>
+<meta name="description" content="Бесплатный онлайн-калькулятор: сумма прописью с НДС для договоров и платёжных документов. Любая ставка НДС — 22%, 20%, 10%, 7%, 5% или своя. НДС в том числе, сверху или без НДС. Копирование в один клик.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://dotsden.github.io/summa-propisyu/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Сумма прописью с НДС 22% — онлайн-калькулятор">
+<meta property="og:description" content="Сумма прописью для договоров и счетов с любой ставкой НДС: 22%, 20%, 10%, 7%, 5% или своя. Бесплатно, без регистрации.">
+<meta property="og:url" content="https://dotsden.github.io/summa-propisyu/">
+<meta property="og:locale" content="ru_RU">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Сумма прописью с НДС",
+  "description": "Онлайн-калькулятор суммы прописью с НДС по любой ставке: 22%, 20%, 10%, 7%, 5% или произвольной. Режимы: НДС включён, НДС сверху, без НДС.",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Any",
+  "inLanguage": "ru",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "RUB" }
+}
+</script>
+<style>
+  :root{
+    --paper:#F7F6F2;
+    --ink:#22262B;
+    --muted:#6B7076;
+    --line:#C9CBC6;
+    --field:#FFFFFF;
+    --accent:#2C55A0;      /* синие чернила */
+    --accent-soft:#E8EEF9;
+    --serif:"PT Serif",Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:40px 16px 64px;
+  }
+  .sheet{width:100%;max-width:580px}
+
+  header h1{
+    font-family:var(--serif);
+    font-size:26px;
+    font-weight:700;
+    letter-spacing:.2px;
+  }
+  header p{
+    color:var(--muted);
+    font-size:13px;
+    margin-top:6px;
+    line-height:1.45;
+  }
+
+  .block{margin-top:26px}
+  .label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.09em;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+
+  /* сумма */
+  input#amount{
+    width:100%;
+    font-family:var(--serif);
+    font-variant-numeric:tabular-nums;
+    font-size:32px;
+    text-align:right;
+    padding:12px 16px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    background:var(--field);
+    color:var(--ink);
+  }
+  input#amount:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+
+  /* ставка */
+  .rate-row{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+  .chip{
+    font-family:var(--sans);
+    font-size:15px;
+    padding:9px 16px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    background:var(--field);
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .chip[aria-pressed="true"]{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+  .chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .custom-rate{
+    display:flex;align-items:center;gap:6px;
+    border:1px solid var(--line);border-radius:4px;
+    background:var(--field);padding:0 12px 0 4px;
+  }
+  .custom-rate.active{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+  .custom-rate input{
+    width:64px;border:none;background:transparent;
+    font-size:15px;padding:9px 4px 9px 10px;text-align:right;color:var(--ink);
+  }
+  .custom-rate input:focus{outline:none}
+  .custom-rate span{color:var(--muted);font-size:15px}
+
+  /* режим НДС и формат */
+  .mode-row{display:flex;flex-wrap:wrap;gap:8px}
+  select{
+    width:100%;
+    font-family:var(--sans);
+    font-size:14px;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    background:var(--field);
+    color:var(--ink);
+  }
+  select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+
+  .check{
+    display:flex;align-items:center;gap:8px;
+    margin-top:12px;font-size:14px;cursor:pointer;user-select:none;
+  }
+  .check input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+
+  /* результат — ячейка платёжного поручения */
+  .cell{
+    margin-top:30px;
+    border:1.5px solid var(--ink);
+    background:var(--field);
+    padding:14px 16px 16px;
+    position:relative;
+  }
+  .cell::before{
+    content:"Сумма прописью";
+    position:absolute;
+    top:-9px;left:12px;
+    background:var(--field);
+    padding:0 6px;
+    font-size:11px;
+    letter-spacing:.06em;
+    color:var(--muted);
+  }
+  #result{
+    font-family:var(--serif);
+    font-size:17px;
+    line-height:1.6;
+    min-height:54px;
+    word-break:break-word;
+  }
+  #result.empty{color:var(--muted);font-style:italic}
+
+  .actions{margin-top:18px;display:flex;align-items:center;gap:14px}
+  button.copy{
+    font-family:var(--sans);
+    font-size:15px;
+    font-weight:600;
+    color:#fff;
+    background:var(--accent);
+    border:none;
+    border-radius:4px;
+    padding:12px 24px;
+    cursor:pointer;
+  }
+  button.copy:hover{background:#254a8d}
+  button.copy:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  #copied{
+    font-size:13px;color:var(--accent);
+    opacity:0;transition:opacity .25s;
+  }
+  #copied.show{opacity:1}
+
+  footer{
+    margin-top:34px;
+    font-size:12px;
+    color:var(--muted);
+    line-height:1.5;
+    border-top:1px solid var(--line);
+    padding-top:14px;
+  }
+  footer h2{font-size:14px;color:var(--ink);margin-bottom:8px;font-family:var(--serif)}
+  footer p{margin-top:8px}
+
+  @media (prefers-reduced-motion: reduce){
+    #copied{transition:none}
+  }
+  @media (max-width:480px){
+    input#amount{font-size:26px}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <h1>Сумма прописью с НДС</h1>
+    <p>Ставка НДС — любая: выберите готовую или впишите свою. Работает без интернета, всё считается прямо в браузере.</p>
+  </header>
+
+  <div class="block">
+    <div class="label">Сумма, руб.</div>
+    <input id="amount" type="text" inputmode="decimal" value="1000,00" autocomplete="off" spellcheck="false">
+  </div>
+
+  <div class="block">
+    <div class="label">Ставка НДС, %</div>
+    <div class="rate-row" id="rates">
+      <button class="chip" data-rate="22" aria-pressed="true">22</button>
+      <button class="chip" data-rate="20" aria-pressed="false">20</button>
+      <button class="chip" data-rate="10" aria-pressed="false">10</button>
+      <button class="chip" data-rate="7" aria-pressed="false">7</button>
+      <button class="chip" data-rate="5" aria-pressed="false">5</button>
+      <label class="custom-rate" id="customWrap">
+        <input id="customRate" type="text" inputmode="decimal" placeholder="своя" autocomplete="off">
+        <span>%</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="label">НДС в сумме</div>
+    <div class="mode-row" id="modes">
+      <button class="chip" data-mode="included" aria-pressed="true">НДС включён</button>
+      <button class="chip" data-mode="ontop" aria-pressed="false">НДС сверху</button>
+      <button class="chip" data-mode="none" aria-pressed="false">Без НДС</button>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="label">Формат прописи</div>
+    <select id="fmt">
+      <option value="1">100 (Сто) рублей 00 копеек</option>
+      <option value="2">100,00 (Сто рублей 00 копеек)</option>
+      <option value="3" selected>100,00 руб. (Сто рублей 00 копеек)</option>
+      <option value="4">100 рублей 00 копеек (Сто рублей 00 копеек)</option>
+      <option value="5">100,00 (Сто 00/100) рублей</option>
+    </select>
+    <label class="check">
+      <input type="checkbox" id="capital" checked>
+      С заглавной буквы
+    </label>
+  </div>
+
+  <div class="cell">
+    <div id="result"></div>
+  </div>
+
+  <div class="actions">
+    <button class="copy" id="copyBtn">Скопировать пропись</button>
+    <span id="copied">Скопировано</span>
+  </div>
+
+  <footer>
+    <h2>Как работает калькулятор</h2>
+    <p>Введите сумму — калькулятор мгновенно напишет её прописью для договора, счёта или
+    платёжного поручения. Ставку НДС можно выбрать из готовых (22%, 20%, 10%, 7%, 5%)
+    или ввести свою — любую, включая расчётные ставки.</p>
+    <p>Режим «НДС включён» выделяет налог из суммы (например, при ставке 22% —
+    как 22/122 от суммы). Режим «НДС сверху» начисляет налог на сумму и показывает итог.
+    Копейки округляются арифметически до двух знаков. Пять форматов прописи и копирование
+    результата в один клик.</p>
+    <p>Расчёт выполняется в браузере: данные никуда не отправляются,
+    страница работает даже без интернета.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- сумма прописью ---------- */
+  var ONES_M = ['','один','два','три','четыре','пять','шесть','семь','восемь','девять'];
+  var ONES_F = ['','одна','две','три','четыре','пять','шесть','семь','восемь','девять'];
+  var TEENS  = ['десять','одиннадцать','двенадцать','тринадцать','четырнадцать','пятнадцать','шестнадцать','семнадцать','восемнадцать','девятнадцать'];
+  var TENS   = ['','','двадцать','тридцать','сорок','пятьдесят','шестьдесят','семьдесят','восемьдесят','девяносто'];
+  var HUNDS  = ['','сто','двести','триста','четыреста','пятьсот','шестьсот','семьсот','восемьсот','девятьсот'];
+  var SCALES = [
+    null,
+    { forms:['тысяча','тысячи','тысяч'], fem:true },
+    { forms:['миллион','миллиона','миллионов'], fem:false },
+    { forms:['миллиард','миллиарда','миллиардов'], fem:false },
+    { forms:['триллион','триллиона','триллионов'], fem:false }
+  ];
+
+  function plural(n, forms){
+    n = Math.abs(n) % 100;
+    if (n >= 11 && n <= 14) return forms[2];
+    switch (n % 10){
+      case 1: return forms[0];
+      case 2: case 3: case 4: return forms[1];
+      default: return forms[2];
+    }
+  }
+  function triple(n, fem){
+    var out = [], h = Math.floor(n/100), t = Math.floor((n%100)/10), o = n%10;
+    if (h) out.push(HUNDS[h]);
+    if (t === 1) out.push(TEENS[o]);
+    else {
+      if (t) out.push(TENS[t]);
+      if (o) out.push((fem ? ONES_F : ONES_M)[o]);
+    }
+    return out;
+  }
+  function numberToWords(n){
+    if (n === 0) return 'ноль';
+    var groups = [];
+    while (n > 0){ groups.push(n % 1000); n = Math.floor(n/1000); }
+    var words = [];
+    for (var i = groups.length - 1; i >= 0; i--){
+      var g = groups[i];
+      if (!g) continue;
+      var sc = SCALES[i];
+      words = words.concat(triple(g, sc ? sc.fem : false));
+      if (sc) words.push(plural(g, sc.forms));
+    }
+    return words.join(' ');
+  }
+
+  /* ---------- форматирование ---------- */
+  var NBSP = '\u202F'; // узкий неразрывный пробел между разрядами
+  function fmtMoney(kop){
+    var rub = Math.floor(kop/100), k = kop % 100;
+    return String(rub).replace(/\B(?=(\d{3})+(?!\d))/g, NBSP) + ',' + String(k).padStart(2,'0');
+  }
+  function fmtRub(kop){
+    return String(Math.floor(kop/100)).replace(/\B(?=(\d{3})+(?!\d))/g, NBSP);
+  }
+  function kopStr(kop){ return String(kop % 100).padStart(2,'0'); }
+  function cap(s, on){ return on ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
+  function moneyWords(kop, capital){
+    var rub = Math.floor(kop/100), k = kop % 100;
+    var rubWord = plural(rub, ['рубль','рубля','рублей']);
+    var kopWord = plural(k, ['копейка','копейки','копеек']);
+    return cap(numberToWords(rub) + ' ' + rubWord + ' ' + kopStr(kop) + ' ' + kopWord, capital);
+  }
+  function formatAmount(kop, fmt, capital){
+    var rub = Math.floor(kop/100);
+    var w = numberToWords(rub);
+    var rubWord = plural(rub, ['рубль','рубля','рублей']);
+    var kopWord = plural(kop % 100, ['копейка','копейки','копеек']);
+    switch (fmt){
+      case 1: return fmtRub(kop) + ' (' + cap(w, capital) + ') ' + rubWord + ' ' + kopStr(kop) + ' ' + kopWord;
+      case 2: return fmtMoney(kop) + ' (' + moneyWords(kop, capital) + ')';
+      case 4: return fmtRub(kop) + ' ' + rubWord + ' ' + kopStr(kop) + ' ' + kopWord + ' (' + moneyWords(kop, capital) + ')';
+      case 5: return fmtMoney(kop) + ' (' + cap(w, capital) + ' ' + kopStr(kop) + '/100) ' + rubWord;
+      default: return fmtMoney(kop) + ' руб. (' + moneyWords(kop, capital) + ')';
+    }
+  }
+  function build(kop, rate, mode, fmt, capital){
+    var rateStr = String(rate).replace('.', ',');
+    if (mode === 'none'){
+      return formatAmount(kop, fmt, capital) + ', без НДС';
+    }
+    if (mode === 'included'){
+      var vat1 = Math.round(kop * rate / (100 + rate));
+      return formatAmount(kop, fmt, capital) +
+        ', в том числе НДС ' + rateStr + '% – ' + fmtMoney(vat1) +
+        ' руб. (' + moneyWords(vat1, capital) + ')';
+    }
+    var vat2 = Math.round(kop * rate / 100);
+    var total = kop + vat2;
+    return formatAmount(kop, fmt, capital) +
+      ', кроме того НДС ' + rateStr + '% – ' + fmtMoney(vat2) +
+      ' руб. (' + moneyWords(vat2, capital) + '), всего с учётом НДС – ' +
+      fmtMoney(total) + ' руб. (' + moneyWords(total, capital) + ')';
+  }
+
+  /* ---------- состояние и UI ---------- */
+  var state = { rate: 22, mode: 'included' };
+
+  var amountEl = document.getElementById('amount');
+  var fmtEl = document.getElementById('fmt');
+  var capEl = document.getElementById('capital');
+  var resultEl = document.getElementById('result');
+  var customEl = document.getElementById('customRate');
+  var customWrap = document.getElementById('customWrap');
+  var copiedEl = document.getElementById('copied');
+
+  function parseAmount(str){
+    // принимает "1 234,56", "1234.56", "1000"
+    var s = String(str).replace(/[\s\u00A0\u202F]/g, '').replace(',', '.');
+    if (!s || !/^\d+(\.\d{0,2})?$/.test(s)) return null;
+    var kop = Math.round(parseFloat(s) * 100);
+    if (!isFinite(kop) || kop < 0 || kop > 999999999999999) return null;
+    return kop;
+  }
+  function parseRate(str){
+    var s = String(str).replace(',', '.').trim();
+    if (!s) return null;
+    var r = parseFloat(s);
+    if (!isFinite(r) || r <= 0 || r >= 100) return null;
+    return Math.round(r * 100) / 100;
+  }
+
+  function render(){
+    var kop = parseAmount(amountEl.value);
+    if (kop === null){
+      resultEl.textContent = 'Введите сумму, например 1 000,00';
+      resultEl.classList.add('empty');
+      return;
+    }
+    resultEl.classList.remove('empty');
+    resultEl.textContent = build(kop, state.rate, state.mode, parseInt(fmtEl.value, 10), capEl.checked);
+  }
+
+  /* ставки-кнопки */
+  var rateChips = document.querySelectorAll('#rates .chip');
+  rateChips.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      rateChips.forEach(function(b){ b.setAttribute('aria-pressed','false'); });
+      btn.setAttribute('aria-pressed','true');
+      customWrap.classList.remove('active');
+      customEl.value = '';
+      state.rate = parseFloat(btn.dataset.rate);
+      render();
+    });
+  });
+
+  /* своя ставка */
+  customEl.addEventListener('input', function(){
+    var r = parseRate(customEl.value);
+    if (r !== null){
+      rateChips.forEach(function(b){ b.setAttribute('aria-pressed','false'); });
+      customWrap.classList.add('active');
+      state.rate = r;
+      render();
+    }
+  });
+
+  /* режим НДС */
+  var modeChips = document.querySelectorAll('#modes .chip');
+  modeChips.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      modeChips.forEach(function(b){ b.setAttribute('aria-pressed','false'); });
+      btn.setAttribute('aria-pressed','true');
+      state.mode = btn.dataset.mode;
+      render();
+    });
+  });
+
+  amountEl.addEventListener('input', render);
+  fmtEl.addEventListener('change', render);
+  capEl.addEventListener('change', render);
+
+  /* копирование с fallback для старых браузеров */
+  document.getElementById('copyBtn').addEventListener('click', function(){
+    var text = resultEl.textContent;
+    if (resultEl.classList.contains('empty')) return;
+    function done(){
+      copiedEl.classList.add('show');
+      setTimeout(function(){ copiedEl.classList.remove('show'); }, 1500);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(function(){ legacyCopy(text); done(); });
+    } else {
+      legacyCopy(text); done();
+    }
+    function legacyCopy(t){
+      var ta = document.createElement('textarea');
+      ta.value = t;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch(e){}
+      document.body.removeChild(ta);
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
