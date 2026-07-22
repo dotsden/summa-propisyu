@@ -223,8 +223,18 @@
   </header>
 
   <div class="block">
-    <div class="label">Сумма, руб.</div>
+    <div class="label">Сумма</div>
     <input id="amount" type="text" inputmode="decimal" value="1000,00" autocomplete="off" spellcheck="false">
+  </div>
+
+  <div class="block">
+    <div class="label">Валюта</div>
+    <div class="mode-row" id="currencies">
+      <button class="chip" data-cur="rub" aria-pressed="true">Рубль</button>
+      <button class="chip" data-cur="usd" aria-pressed="false">Доллар США</button>
+      <button class="chip" data-cur="eur" aria-pressed="false">Евро</button>
+      <button class="chip" data-cur="cny" aria-pressed="false">Юань</button>
+    </div>
   </div>
 
   <div class="block">
@@ -259,6 +269,7 @@
       <option value="3" selected>100,00 руб. (Сто рублей 00 копеек)</option>
       <option value="4">100 рублей 00 копеек (Сто рублей 00 копеек)</option>
       <option value="5">100,00 (Сто 00/100) рублей</option>
+      <!-- подписи форматов обновляются под валюту через JS -->
     </select>
     <label class="check">
       <input type="checkbox" id="capital" checked>
@@ -326,7 +337,8 @@
     }
     return out;
   }
-  function numberToWords(n){
+  // unitFem — род валюты, влияет только на последнюю группу единиц (одна иена / один рубль)
+  function numberToWords(n, unitFem){
     if (n === 0) return 'ноль';
     var groups = [];
     while (n > 0){ groups.push(n % 1000); n = Math.floor(n/1000); }
@@ -335,11 +347,22 @@
       var g = groups[i];
       if (!g) continue;
       var sc = SCALES[i];
-      words = words.concat(triple(g, sc ? sc.fem : false));
+      var fem = sc ? sc.fem : !!unitFem;
+      words = words.concat(triple(g, fem));
       if (sc) words.push(plural(g, sc.forms));
     }
     return words.join(' ');
   }
+
+  /* ---------- справочник валют ---------- */
+  var CURRENCIES = {
+    rub: { main:['рубль','рубля','рублей'],   fem:false, sub:['копейка','копейки','копеек'], short:'руб.' },
+    usd: { main:['доллар США','доллара США','долларов США'], fem:false, sub:['цент','цента','центов'],     short:'долл. США' },
+    eur: { main:['евро','евро','евро'],       fem:false, sub:['цент','цента','центов'],     short:'евро' },
+    cny: { main:['юань','юаня','юаней'],       fem:false, sub:['фэнь','фэня','фэней'],       short:'юань' }
+  };
+  var curKey = 'rub';
+  function CUR(){ return CURRENCIES[curKey]; }
 
   /* ---------- форматирование ---------- */
   var NBSP = '\u202F'; // узкий неразрывный пробел между разрядами
@@ -354,25 +377,30 @@
   function cap(s, on){ return on ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
 
   function moneyWords(kop, capital){
+    var c = CUR();
     var rub = Math.floor(kop/100), k = kop % 100;
-    var rubWord = plural(rub, ['рубль','рубля','рублей']);
-    var kopWord = plural(k, ['копейка','копейки','копеек']);
-    return cap(numberToWords(rub) + ' ' + rubWord + ' ' + kopStr(kop) + ' ' + kopWord, capital);
+    var mainWord = plural(rub, c.main);
+    var s = numberToWords(rub, c.fem) + ' ' + mainWord;
+    if (c.sub){ s += ' ' + kopStr(kop) + ' ' + plural(k, c.sub); }
+    return cap(s, capital);
   }
   function formatAmount(kop, fmt, capital){
+    var c = CUR();
     var rub = Math.floor(kop/100);
-    var w = numberToWords(rub);
-    var rubWord = plural(rub, ['рубль','рубля','рублей']);
-    var kopWord = plural(kop % 100, ['копейка','копейки','копеек']);
+    var w = numberToWords(rub, c.fem);
+    var mainWord = plural(rub, c.main);
+    var subWord = c.sub ? plural(kop % 100, c.sub) : '';
+    var subPart = c.sub ? ' ' + kopStr(kop) + ' ' + subWord : '';
     switch (fmt){
-      case 1: return fmtRub(kop) + ' (' + cap(w, capital) + ') ' + rubWord + ' ' + kopStr(kop) + ' ' + kopWord;
+      case 1: return fmtRub(kop) + ' (' + cap(w, capital) + ') ' + mainWord + subPart;
       case 2: return fmtMoney(kop) + ' (' + moneyWords(kop, capital) + ')';
-      case 4: return fmtRub(kop) + ' ' + rubWord + ' ' + kopStr(kop) + ' ' + kopWord + ' (' + moneyWords(kop, capital) + ')';
-      case 5: return fmtMoney(kop) + ' (' + cap(w, capital) + ' ' + kopStr(kop) + '/100) ' + rubWord;
-      default: return fmtMoney(kop) + ' руб. (' + moneyWords(kop, capital) + ')';
+      case 4: return fmtRub(kop) + ' ' + mainWord + subPart + ' (' + moneyWords(kop, capital) + ')';
+      case 5: return fmtMoney(kop) + ' (' + cap(w, capital) + ' ' + kopStr(kop) + '/100) ' + mainWord;
+      default: return fmtMoney(kop) + ' ' + c.short + ' (' + moneyWords(kop, capital) + ')';
     }
   }
   function build(kop, rate, mode, fmt, capital){
+    var c = CUR();
     var rateStr = String(rate).replace('.', ',');
     if (mode === 'none'){
       return formatAmount(kop, fmt, capital) + ', без НДС';
@@ -381,14 +409,30 @@
       var vat1 = Math.round(kop * rate / (100 + rate));
       return formatAmount(kop, fmt, capital) +
         ', в том числе НДС ' + rateStr + '% – ' + fmtMoney(vat1) +
-        ' руб. (' + moneyWords(vat1, capital) + ')';
+        ' ' + c.short + ' (' + moneyWords(vat1, capital) + ')';
     }
     var vat2 = Math.round(kop * rate / 100);
     var total = kop + vat2;
     return formatAmount(kop, fmt, capital) +
       ', кроме того НДС ' + rateStr + '% – ' + fmtMoney(vat2) +
-      ' руб. (' + moneyWords(vat2, capital) + '), всего с учётом НДС – ' +
-      fmtMoney(total) + ' руб. (' + moneyWords(total, capital) + ')';
+      ' ' + c.short + ' (' + moneyWords(vat2, capital) + '), всего с учётом НДС – ' +
+      fmtMoney(total) + ' ' + c.short + ' (' + moneyWords(total, capital) + ')';
+  }
+
+  /* обновление подписей форматов под выбранную валюту */
+  function updateFormatLabels(){
+    var c = CUR();
+    var one = c.main[0];                 // рубль
+    var many = c.main[2];                 // рублей
+    var subMany = c.sub ? c.sub[2] : '';  // копеек
+    var subTail = c.sub ? ' 00 ' + subMany : '';
+    var wordTail = c.sub ? ' 00 ' + subMany : '';
+    var opts = fmtEl.options;
+    opts[0].textContent = '100 (Сто) ' + many + subTail;
+    opts[1].textContent = '100,00 (Сто ' + many + wordTail + ')';
+    opts[2].textContent = '100,00 ' + c.short + ' (Сто ' + many + wordTail + ')';
+    opts[3].textContent = '100 ' + many + subTail + ' (Сто ' + many + wordTail + ')';
+    opts[4].textContent = '100,00 (Сто 00/100) ' + many;
   }
 
   /* ---------- состояние и UI ---------- */
@@ -470,6 +514,18 @@
     }
   });
 
+  /* валюта */
+  var curChips = document.querySelectorAll('#currencies .chip');
+  curChips.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      curChips.forEach(function(b){ b.setAttribute('aria-pressed','false'); });
+      btn.setAttribute('aria-pressed','true');
+      curKey = btn.dataset.cur;
+      updateFormatLabels();
+      render();
+    });
+  });
+
   /* режим НДС */
   var modeChips = document.querySelectorAll('#modes .chip');
   modeChips.forEach(function(btn){
@@ -532,6 +588,7 @@
     }
   });
 
+  updateFormatLabels();
   render();
 })();
 </script>
